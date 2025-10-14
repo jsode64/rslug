@@ -47,6 +47,7 @@
 pub struct Slugifier {
     separator: String,
     to_lowercase: bool,
+    truncate: Option<usize>,
 }
 
 impl Default for Slugifier {
@@ -57,6 +58,7 @@ impl Default for Slugifier {
         Self {
             separator: "-".to_string(),
             to_lowercase: true,
+            truncate: None,
         }
     }
 }
@@ -105,6 +107,45 @@ impl Slugifier {
         self
     }
 
+    /// Sets the maximum length of the final slug.
+    ///
+    /// This is a "smart" truncation that will attempt to cut the slug at the
+    /// last full word (separator) before the specified length. If the first
+    /// word itself is longer than the max length, it will be hard-truncated.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_length` - The maximum number of characters for the final slug.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rslug::Slugifier;
+    /// let slugifier = Slugifier::new().truncate(20);
+    /// let text = "this is a very long title";
+    /// assert_eq!(slugifier.slugify(text), "this-is-a-very-long");
+    /// ```
+    pub fn truncate(mut self, max_length: usize) -> Self {
+        self.truncate = Some(max_length);
+        self
+    }
+
+    /// Helper function to apply the truncation logic to a mutable slug string.
+    pub fn apply_truncation(&self, slug: &mut String) {
+        if let Some(max_len) = self.truncate {
+            if slug.len() > max_len {
+                if !self.separator.is_empty() {
+                    if let Some(last_sep_index) = slug[..max_len].rfind(&self.separator) {
+                        slug.truncate(last_sep_index);
+                        return;
+                    }
+                }
+
+                slug.truncate(max_len);
+            }
+        }
+    }
+
     /// Generates a slug from the given text based on the current configuration.
     ///
     /// # Arguments
@@ -140,6 +181,8 @@ impl Slugifier {
         if slug.ends_with(&self.separator) {
             slug.truncate(slug.len() - self.separator.len());
         }
+
+        self.apply_truncation(&mut slug);
 
         slug
     }
@@ -180,6 +223,8 @@ impl Slugifier {
         if slug.ends_with(&self.separator) {
             slug.truncate(slug.len() - self.separator.len());
         }
+
+        self.apply_truncation(&mut slug);
 
         slug
     }
@@ -266,5 +311,33 @@ mod tests {
     fn test_slugify_ascii_no_lowercase() {
         let slugifier = Slugifier::new().to_lowercase(false);
         assert_eq!(slugifier.slugify_ascii(b"Keep-Case"), "Keep-Case");
+    }
+
+    #[test]
+    fn test_truncation_at_word_boundary() {
+        let slugifier = Slugifier::new().truncate(20);
+        let text = "this is a very long title that should be shortened";
+        assert_eq!(slugifier.slugify(text), "this-is-a-very-long");
+    }
+
+    #[test]
+    fn test_truncation_with_no_separator() {
+        let slugifier = Slugifier::new().truncate(20);
+        let text = "supercalifragilisticexpialidocious";
+        assert_eq!(slugifier.slugify(text), "supercalifragilistic");
+    }
+
+    #[test]
+    fn test_truncation_not_needed() {
+        let slugifier = Slugifier::new().truncate(50);
+        let text = "this title is short enough";
+        assert_eq!(slugifier.slugify(text), "this-title-is-short-enough");
+    }
+
+    #[test]
+    fn test_truncation_on_ascii_slug() {
+        let slugifier = Slugifier::new().truncate(15);
+        let text = b"An ASCII title that is long";
+        assert_eq!(slugifier.slugify_ascii(text), "an-ascii-title");
     }
 }

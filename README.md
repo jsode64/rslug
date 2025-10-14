@@ -12,6 +12,7 @@ This library is inspired by popular [slugify](https://www.npmjs.com/package/slug
 - Performance-Optimized ASCII: Includes a `slugify_ascii` method for maximum speed with ASCII-only input.
 - Lightweight: `rslug` is tiny and has minimal dependencies.
 - Fast: Built for performance, ideal for web servers and static site generators.
+- Smart Truncation: Limits slug length without cutting words in half.
 
 ## Installation
 
@@ -19,7 +20,7 @@ Add `rslug` to your `Cargo.toml` file:
 
 ```bash
 [dependencies]
-rslug = "0.1.0"
+rslug = "0.3.0"  # Check for the latest version on crates.io
 ```
 
 Or
@@ -69,6 +70,13 @@ let slugifier_case_sensitive = Slugifier::new()
 let text_with_case = "Keep The Case";
 let slug_with_case = slugifier_case_sensitive.slugify(text_with_case);
 assert_eq!(slug_with_case, "Keep-The-Case");
+
+let slugifier_truncate = Slugifier::new()
+    .truncate(20);
+    
+let text_to_truncate = "this is a very long title that should be shortened";
+let slug_with_truncate = slugifier_truncate.slugify(text_to_truncate);
+assert_eq!(slug_with_truncate, "this-is-a-very-long");
 ```
 
 ## Performance: ASCII-Only Slugs

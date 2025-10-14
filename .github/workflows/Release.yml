@@ -1,0 +1,47 @@
+# The name of the workflow.
+name: Release
+
+# This workflow triggers when a new Git tag is pushed to the repository.
+on:
+  push:
+    # The 'tags' filter ensures this only runs for tags, not regular commits.
+    # The pattern 'v*' matches tags that start with 'v', like 'v0.1.0'.
+    tags:
+      - 'v*'
+
+# Defines the jobs for this workflow.
+jobs:
+  # The 'publish' job will handle the release process.
+  publish:
+    # A friendly name for the job.
+    name: Create Release
+
+    # This job will run on the latest version of Ubuntu.
+    runs-on: ubuntu-latest
+
+    # The sequence of steps to execute.
+    steps:
+      # Step 1: Check out the repository's code.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install the Rust toolchain.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # Step 3: Build the project in release mode.
+      # This step ensures that the tagged version of your code compiles successfully
+      # with all optimizations enabled. It's a final sanity check before publishing.
+      - name: Build in release mode
+        run: cargo build --release
+
+      # --- FUTURE STEP: UNCOMMENT TO PUBLISH TO CRATES.IO ---
+      # To enable automatic publishing, you would need to:
+      # 1. Add your crates.io API token as a secret in your GitHub repository settings
+      #    (e.g., name it 'CARGO_REGISTRY_TOKEN').
+      # 2. Uncomment the following lines.
+      #
+      # - name: Publish to crates.io
+      #   env:
+      #     CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      #   run: cargo publish
