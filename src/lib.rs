@@ -143,6 +143,46 @@ impl Slugifier {
 
         slug
     }
+
+    /// Generates a slug from the given ASCII text.
+    ///
+    /// # Examples
+    /// ```
+    /// use rslug::Slugifier;
+    ///
+    /// let slugifier = Slugifier::new();
+    /// let a = slugifier.slugify_ascii(b"Hello, World!");
+    /// let b = slugifier.slugify_ascii(b"Slugs are slow, but cool");
+    ///
+    /// assert_eq!(a, "hello-world");
+    /// assert_eq!(b, "slugs-are-slow-but-cool");
+    /// ```
+    pub fn slugify_ascii(&self, text: &[u8]) -> String {
+        let mut slug = String::new();
+        let mut just_sep = true;
+
+        for &c in text {
+            if c.is_ascii_alphanumeric() {
+                slug.push(if self.to_lowercase {
+                    c.to_ascii_lowercase()
+                } else {
+                    c
+                } as char);
+                just_sep = false;
+            } else if !just_sep {
+                // Need separator.
+                slug.push_str(&self.separator);
+                just_sep = true;
+            }
+        }
+
+        // Trim any ending separator.
+        if slug.ends_with(&self.separator) {
+            slug.truncate(slug.len() - self.separator.len());
+        }
+
+        slug
+    }
 }
 
 /// A convenient macro to slugify a string with default settings.
