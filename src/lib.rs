@@ -19,7 +19,7 @@
 //!
 //! let unicode_text = "你好世界 & Rust";
 //! let unicode_slug = slugify!(unicode_text);
-//! assert_eq!(unicode_slug, "ni-hao-shi-jie-rust");
+//! assert_eq!(unicode_slug, "nihaoshijie-rust");
 //! ```
 //!
 //! ## Advanced Configuration
