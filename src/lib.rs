@@ -149,38 +149,42 @@ impl Slugifier {
 
     /// Generates a slug from the given text based on the current configuration.
     ///
-    /// # Arguments
+    /// # Examples
+    /// ```
+    /// use rslug::Slugifier;
     ///
-    /// * `text` - The string slice to convert into a slug.
+    /// let slugifier = Slugifier::new();
+    /// let a = slugifier.slugify("Hello, World!");
+    /// let b = slugifier.slugify("Slugs are slow, but cool");
+    ///
+    /// assert_eq!(a, "hello-world");
+    /// assert_eq!(b, "slugs-are-slow-but-cool");
+    /// ```
     pub fn slugify(&self, text: &str) -> String {
-        // Transliterate Unicode characters to their ASCII equivalent.
-        let text = any_ascii::any_ascii(text);
+        use any_ascii::any_ascii;
 
-        let mut slug = String::with_capacity(text.len());
-        // Start by assuming we are at a boundary, to prevent leading separators.
-        let mut last_char_was_separator = true;
+        let text = any_ascii(text);
+        let mut slug = String::new();
+        let mut found_sep = false;
 
-        for c in text.chars() {
-            // Check if the character is one we want to keep.
-            if c.is_alphanumeric() {
-                if self.to_lowercase {
-                    slug.push(c.to_ascii_lowercase());
-                } else {
-                    slug.push(c);
-                }
-                last_char_was_separator = false;
-            } else {
-                // If the last char wasn't a separator, we can add one now.
-                if !last_char_was_separator {
+        for c in text.into_bytes() {
+            if c.is_ascii_alphanumeric() {
+                // If a separator was found before, add it before the character.
+                if found_sep && !slug.is_empty() {
                     slug.push_str(&self.separator);
-                    last_char_was_separator = true;
                 }
-            }
-        }
 
-        // If the slug ends with a separator, trim it.
-        if slug.ends_with(&self.separator) {
-            slug.truncate(slug.len() - self.separator.len());
+                // Push the character.
+                slug.push(if self.to_lowercase {
+                    c.to_ascii_lowercase()
+                } else {
+                    c
+                } as char);
+
+                found_sep = false;
+            } else {
+                found_sep = true;
+            }
         }
 
         self.apply_truncation(&mut slug);
@@ -203,26 +207,26 @@ impl Slugifier {
     /// ```
     pub fn slugify_ascii(&self, text: &[u8]) -> String {
         let mut slug = String::new();
-        let mut just_sep = true;
+        let mut found_sep = false;
 
         for &c in text {
             if c.is_ascii_alphanumeric() {
+                // If a separator was found before, add it before the character.
+                if found_sep && !slug.is_empty() {
+                    slug.push_str(&self.separator);
+                }
+
+                // Push the character.
                 slug.push(if self.to_lowercase {
                     c.to_ascii_lowercase()
                 } else {
                     c
                 } as char);
-                just_sep = false;
-            } else if !just_sep {
-                // Need separator.
-                slug.push_str(&self.separator);
-                just_sep = true;
-            }
-        }
 
-        // Trim any ending separator.
-        if slug.ends_with(&self.separator) {
-            slug.truncate(slug.len() - self.separator.len());
+                found_sep = false;
+            } else {
+                found_sep = true;
+            }
         }
 
         self.apply_truncation(&mut slug);
@@ -274,6 +278,10 @@ mod tests {
     #[test]
     fn test_leading_and_trailing_hyphens() {
         assert_eq!(slugify!("--leading and trailing--"), "leading-and-trailing");
+        assert_eq!(
+            slugify_ascii!(b"--leading and trailing--"),
+            "leading-and-trailing"
+        );
     }
 
     #[test]
