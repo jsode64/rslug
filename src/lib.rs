@@ -1,4 +1,4 @@
-//! # slugify-rs
+//! # rslug
 //!
 //! A simple, fast, and configurable Rust library to create URL-friendly slugs from strings,
 //! with great support for Unicode.
@@ -11,7 +11,7 @@
 //! The easiest way to use the library is with the `slugify!` macro.
 //!
 //! ```
-//! use slugify_rs::slugify;
+//! use rslug::slugify;
 //!
 //! let text = "Hello World! This is a test... 123?";
 //! let slug = slugify!(text);
@@ -28,7 +28,7 @@
 //! This allows you to set a custom separator, control case, and more.
 //!
 //! ```
-//! use slugify_rs::Slugifier;
+//! use rslug::Slugifier;
 //!
 //! // Create a custom slugifier with an underscore separator
 //! let slugifier = Slugifier::new()
@@ -78,7 +78,7 @@ impl Slugifier {
     /// # Example
     ///
     /// ```
-    /// use slugify_rs::Slugifier;
+    /// use rslug::Slugifier;
     /// let slugifier = Slugifier::new().separator("_");
     /// assert_eq!(slugifier.slugify("hello world"), "hello_world");
     /// ```
@@ -96,7 +96,7 @@ impl Slugifier {
     /// # Example
     ///
     /// ```
-    /// use slugify_rs::Slugifier;
+    /// use rslug::Slugifier;
     /// let slugifier = Slugifier::new().to_lowercase(false);
     /// assert_eq!(slugifier.slugify("Hello World"), "Hello-World");
     /// ```

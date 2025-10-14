@@ -1,8 +1,8 @@
-//! This is an example binary to demonstrate the usage of the `slugify-rs` library.
+//! This is an example binary to demonstrate the usage of the `rslug` library.
 //! It shows both the simple `slugify!` macro and the configurable `Slugifier` struct.
 
 // We need to bring the library crate into scope. The name is determined by `[package].name` in Cargo.toml.
-use slugify_rs::{Slugifier, slugify};
+use rslug::{Slugifier, slugify};
 
 fn main() {
     println!("--- Basic Usage with slugify! macro ---");

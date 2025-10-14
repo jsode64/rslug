@@ -1,12 +1,12 @@
 [package]
-name = "slugify-rs"
+name = "rslug"
 version = "0.1.0"
 edition = "2024"
 authors = ["Ezra Natanael <ezrantn@proton.me>"]
 
 description = "A simple, fast, and configurable library to create URL-friendly slugs from strings."
 readme = "README.md"
-repository = "https://github.com/ezrantn/slugify-rs"
+repository = "https://github.com/ezrantn/rslug"
 license = "MIT"
 keywords = ["slug", "slugify", "url", "text", "unicode"]
 categories = ["text-processing"]
