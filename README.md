@@ -71,12 +71,25 @@ let text_with_case = "Keep The Case";
 let slug_with_case = slugifier_case_sensitive.slugify(text_with_case);
 assert_eq!(slug_with_case, "Keep-The-Case");
 
+// Example 3: Truncate the string
 let slugifier_truncate = Slugifier::new()
     .truncate(20);
-    
+
 let text_to_truncate = "this is a very long title that should be shortened";
 let slug_with_truncate = slugifier_truncate.slugify(text_to_truncate);
 assert_eq!(slug_with_truncate, "this-is-a-very-long");
+```
+
+## Sanitizing
+
+```rust
+use rslug::{sanitize_filename, sanitize_replacement};
+
+// Remove invalid filename characters
+assert_eq!(sanitize_filename("my:illegal*file?.txt"), "my-illegal-file-.txt");
+
+// Replace disallowed characters with custom token
+assert_eq!(sanitize_replacement("Rust🐌Lang!", "_"), "Rust_Lang_");
 ```
 
 ## Performance: ASCII-Only Slugs

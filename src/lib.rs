@@ -48,6 +48,7 @@ pub struct Slugifier {
     separator: String,
     to_lowercase: bool,
     truncate: Option<usize>,
+    sanitize_replacement: String,
 }
 
 impl Default for Slugifier {
@@ -59,6 +60,7 @@ impl Default for Slugifier {
             separator: "-".to_string(),
             to_lowercase: true,
             truncate: None,
+            sanitize_replacement: String::new(),
         }
     }
 }
@@ -128,6 +130,61 @@ impl Slugifier {
     pub fn truncate(mut self, max_length: usize) -> Self {
         self.truncate = Some(max_length);
         self
+    }
+
+    /// Sets the replacement string for illegal filename characters.
+    ///
+    /// By default, illegal characters are simply removed.
+    ///
+    /// # Arguments
+    ///
+    /// * `replacement` - The string to use as a replacement (e.g., "_").
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rslug::Slugifier;
+    /// let slugifier = Slugifier::new().sanitize_replacement("_");
+    /// let text = "file/with:illegal*chars";
+    /// assert_eq!(slugifier.sanitize_filename(text), "file_with_illegal_chars");
+    ///
+    pub fn sanitize_replacement(mut self, replacement: &str) -> Self {
+        self.sanitize_replacement = replacement.to_string();
+        self
+    }
+
+    /// Sanitizes a string to create a valid and safe filename.
+    ///
+    /// This method is more conservative than `slugify`. It preserves case and spaces,
+    /// and only removes or replaces characters that are illegal in file paths on
+    /// major operating systems (e.g., `/`, `\`, `:`, `*`, `?`, `"`).
+    ///
+    /// # Arguments
+    ///
+    /// * `filename` - The string to sanitize.
+    pub fn sanitize_filename(&self, filename: &str) -> String {
+        const ILLEGAL_FILENAME_CHARS: &[char] = &['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+        let mut sanitized = String::with_capacity(filename.len());
+        let mut last_char_was_boundary = false;
+
+        for c in filename.chars() {
+            if ILLEGAL_FILENAME_CHARS.contains(&c) || c.is_whitespace() {
+                if !last_char_was_boundary {
+                    if c.is_whitespace() {
+                        sanitized.push(' ');
+                    } else {
+                        sanitized.push_str(&self.sanitize_replacement);
+                    }
+                    last_char_was_boundary = true;
+                }
+            } else {
+                sanitized.push(c);
+                last_char_was_boundary = false;
+            }
+        }
+
+        // Trim leading/trailing boundaries which manifest as spaces or replacements
+        sanitized.trim().to_string()
     }
 
     /// Helper function to apply the truncation logic to a mutable slug string.
@@ -348,5 +405,38 @@ mod tests {
         let slugifier = Slugifier::new().truncate(15);
         let text = b"An ASCII title that is long";
         assert_eq!(slugifier.slugify_ascii(text), "an-ascii-title");
+    }
+
+    #[test]
+    fn test_sanitize_filename_default() {
+        let slugifier = Slugifier::new();
+        let unsafe_path = "Report / Section <2>?.docx";
+        assert_eq!(
+            slugifier.sanitize_filename(unsafe_path),
+            "Report Section 2.docx"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_filename_with_replacement() {
+        let slugifier = Slugifier::new().sanitize_replacement("_");
+        let unsafe_path = "My Docs/Report:Final?.pdf";
+        assert_eq!(
+            slugifier.sanitize_filename(unsafe_path),
+            "My Docs_Report_Final_.pdf"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_filename_no_changes_needed() {
+        let slugifier = Slugifier::new();
+        let safe_path = "A perfectly valid filename.txt";
+        assert_eq!(slugifier.sanitize_filename(safe_path), safe_path);
+    }
+
+    #[test]
+    fn test_sanitize_filename_empty() {
+        let slugifier = Slugifier::new();
+        assert_eq!(slugifier.sanitize_filename(""), "");
     }
 }
