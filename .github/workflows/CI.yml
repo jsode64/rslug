@@ -1,0 +1,60 @@
+# This is the name of the workflow as it will appear in the "Actions" tab of your GitHub repository.
+name: Continuous Integration
+
+# This section defines when the workflow should be triggered.
+on:
+  # Run on any push to the 'main' branch.
+  push:
+    branches: [ "main" ]
+  # Run on any pull request that targets the 'main' branch.
+  pull_request:
+    branches: [ "main" ]
+
+# This section defines the jobs that will be run as part of the workflow.
+jobs:
+  # The 'build_and_test' job is a collection of steps that will be executed.
+  build_and_test:
+    # A friendly name for the job displayed on GitHub.
+    name: Build and Test
+
+    # This strategy block configures the job to run on multiple operating systems in parallel.
+    strategy:
+      matrix:
+        # Define the list of operating systems to test on.
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    # Specifies the virtual environment (runner) for the job, based on the 'os' matrix variable.
+    runs-on: ${{ matrix.os }}
+
+    # The sequence of steps that make up the job.
+    steps:
+      # Step 1: Check out the repository's code.
+      # This action downloads your source code into the runner so the workflow can access it.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install the Rust toolchain.
+      # This action sets up the Rust compiler (rustc), package manager (cargo), and other tools.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Install the 'clippy' and 'rustfmt' components for linting and formatting checks.
+          components: clippy, rustfmt
+
+      # Step 3: Check code formatting.
+      # This step runs 'cargo fmt' to ensure the code adheres to the standard Rust style.
+      # The '--check' flag will cause the step to fail if any code is not correctly formatted.
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      # Step 4: Run Clippy for linting.
+      # Clippy is a powerful linter that catches common mistakes and helps enforce idiomatic Rust.
+      # The '-D warnings' flag elevates all warnings to errors, causing the step to fail if there are any lints.
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+      # Step 5: Run tests.
+      # This is the final and most critical step. It runs all unit tests and doctests in your library.
+      # If any test fails, this step will fail, causing the entire workflow run to fail.
+      - name: Run tests
+        run: cargo test
