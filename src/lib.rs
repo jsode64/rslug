@@ -132,17 +132,18 @@ impl Slugifier {
 
     /// Helper function to apply the truncation logic to a mutable slug string.
     pub fn apply_truncation(&self, slug: &mut String) {
-        if let Some(max_len) = self.truncate {
-            if slug.len() > max_len {
-                if !self.separator.is_empty() {
-                    if let Some(last_sep_index) = slug[..max_len].rfind(&self.separator) {
-                        slug.truncate(last_sep_index);
-                        return;
-                    }
-                }
-
-                slug.truncate(max_len);
+        if let Some(max_len) = self.truncate
+            && slug.len() > max_len
+        {
+            if !self.separator.is_empty()
+                && let Some(last_sep_index) = slug[..max_len].rfind(&self.separator)
+            {
+                slug.truncate(last_sep_index);
+                return;
             }
+
+            // If no separator was found (or separator is empty), hard-truncate.
+            slug.truncate(max_len);
         }
     }
 
