@@ -76,4 +76,4 @@ Contributions are welcome! If you have a feature request, find a bug, or want to
 
 ## License
 
-This library is open-source and available under the [MIT License](https://github.com/ezrantn/rslug/LICENSE).
+This library is open-source and available under the [MIT License](https://github.com/ezrantn/rslug/blob/main/LICENSE).
