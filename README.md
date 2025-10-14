@@ -9,6 +9,7 @@ This library is inspired by popular [slugify](https://www.npmjs.com/package/slug
 - Simple API: Get started instantly with the `slugify!` macro.
 - Highly Configurable: Use the `Slugifier` builder for custom separators, case control, and more.
 - Unicode Support: Non-ASCII characters are intelligently transliterated to their ASCII equivalents.
+- Performance-Optimized ASCII: Includes a `slugify_ascii` method for maximum speed with ASCII-only input.
 - Lightweight: `rslug` is tiny and has minimal dependencies.
 - Fast: Built for performance, ideal for web servers and static site generators.
 
@@ -68,6 +69,22 @@ let slugifier_case_sensitive = Slugifier::new()
 let text_with_case = "Keep The Case";
 let slug_with_case = slugifier_case_sensitive.slugify(text_with_case);
 assert_eq!(slug_with_case, "Keep-The-Case");
+```
+
+## Performance: ASCII-Only Slugs
+
+For performance-critical scenarios where you can guarantee the input is ASCII, you can use the `slugify_ascii` method. It operates directly on bytes (`&[u8]`) and avoids the overhead of Unicode transliteration, making it significantly faster.
+
+```rust
+use rslug::Slugifier;
+
+let slugifier = Slugifier::new();
+
+// Note the `b` prefix for a byte string literal
+let ascii_text = b"This is ASCII-only, so it can be faster!";
+let slug = slugifier.slugify_ascii(ascii_text);
+
+assert_eq!(slug, "this-is-ascii-only-so-it-can-be-faster");
 ```
 
 ## Contributing 

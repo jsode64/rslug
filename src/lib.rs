@@ -195,6 +195,13 @@ macro_rules! slugify {
     };
 }
 
+#[macro_export]
+macro_rules! slugify_ascii {
+    ($text:expr) => {
+        $crate::Slugifier::new().slugify_ascii($text)
+    };
+}
+
 // Unit tests for the library
 #[cfg(test)]
 mod tests {
@@ -243,5 +250,21 @@ mod tests {
     #[test]
     fn test_empty_string() {
         assert_eq!(slugify!(""), "");
+    }
+
+    #[test]
+    fn test_ascii_only() {
+        let slugifier = Slugifier::new();
+        assert_eq!(slugifier.slugify_ascii(b"Hello, World!"), "hello-world");
+        assert_eq!(
+            slugifier.slugify_ascii(b"Slugs are slow, but cool"),
+            "slugs-are-slow-but-cool"
+        );
+    }
+
+    #[test]
+    fn test_slugify_ascii_no_lowercase() {
+        let slugifier = Slugifier::new().to_lowercase(false);
+        assert_eq!(slugifier.slugify_ascii(b"Keep-Case"), "Keep-Case");
     }
 }
